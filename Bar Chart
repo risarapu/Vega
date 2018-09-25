@@ -10,7 +10,6 @@
     "y": {
       "field": "Damage_Descp",
       "type": "nominal",
-      "axis": {"title": "Damage Description", "grid": false}
       "sort": {"field": "Amount","order":"ascending","op": "sum" }
     }
   }
