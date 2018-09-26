@@ -1,16 +1,63 @@
 {
-  "data": {"url": "https://raw.githubusercontent.com/risarapu/Vega/master/losses2015_transformed.csv"},
-  "mark": "bar",
-  "encoding": {
-    "x": {
-      "field": "Amount",
-      "type": "quantitative",
-      "aggregate" : "sum"
-      },
-    "y": {
-      "field": "Damage_Descp",
-      "type": "nominal",
-      "sort": {"field": "Amount","order":"ascending","op": "sum" }
+  "$schema": "https://vega.github.io/schema/vega/v4.json",
+  "width": 960,
+  "height": 700,
+  "padding": {"top": 10, "left": 30, "bottom": 30, "right": 10},
+
+  "data": [
+    {
+      "name": "losses2015",
+      "url": "https://raw.githubusercontent.com/risarapu/Vega/master/losses2015_transformed.csv",
+      "format": {"type": "csv", "parse": "auto"},
+      "transform": [
+        {"type": "aggregate",
+         "groupby": ["Damage_Descp"],
+         "ops": ["sum"],
+         "fields": ["Amount"],
+          "as": ["Amount"]
+
+        }
+          ]
     }
-  }
+  ],
+ "scales": [
+    {
+      "name": "x",
+      "type": "linear",
+      "range": "width",
+      "domain": {"data": "losses2015", "field": "Amount"}
+    },
+    {
+      "name": "y",
+      "type": "band",
+      "range": "height",
+      "domain": {"data": "losses2015", "field": "Damage_Descp","sort": {"field": "Amount","order":"ascending","op": "sum" }},
+      "nice": true
+    }
+  ],
+  "axes": [
+    { "orient": "bottom", "scale": "x" },
+    { "orient": "left", "scale": "y" }
+  ],
+  "marks": [
+    {
+      "type": "rect",
+      "from": {"data": "losses2015"},
+      "encode": {
+        "enter": {
+          "tooltip": {"signal": "'['+'Damage_Descp :'+datum.Damage_Descp+', Amount :'+ datum.Amount+'] ' "},
+          "x": {"scale": "x", "value": 25},
+          "x2": {"scale": "x", "field": "Amount"},
+          "y": {"scale": "y", "field": "Damage_Descp"},
+          "height": {"scale": "y", "band": true, "offset": -10}
+        },
+        "update": {
+          "fill": {"value": "steelblue"}
+        },
+        "hover": {
+          "fill": {"value": "steelblue"}
+        }
+      }
+    }
+  ]
 }
