@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<head>
+  <title>Vega Lite Bar Chart & Map</title>
+  <meta charset="utf-8">
+
+  <!-- Check: https://github.com/vega/vega-embed -->
+
+  <script src="https://cdn.jsdelivr.net/npm/vega@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-lite@3.0.0-rc3"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vega-embed@3"></script>
+
+</head>
+<body>
+<!-- Container for the visualization -->
+<table>
+  <tr>
+    <td>
+      <p id="vis">
+        <script type="text/javascript">
+  var spec_map = "https://raw.githubusercontent.com/risarapu/Vega/master/Choropleth%20Map.json";
+  vegaEmbed('#vis', spec_map).then(function(result) {
+  }).catch(console.error);
+</script>
+      </p>
+    </td>
+    <td>
+     <p id="vis1" align="center">
+        <script type="text/javascript">
+  var spec_bar = "https://raw.githubusercontent.com/risarapu/Vega/master/Bar%20Chart.json";
+  vegaEmbed('#vis1', spec_bar).then(function(result) {
+  }).catch(console.error);
+</script>
+      </p>
+    </td>
+  </tr>
+</table>
+
+
+</body>
+</html>
