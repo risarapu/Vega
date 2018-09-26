@@ -1,0 +1,76 @@
+{
+ "$schema": "https://vega.github.io/schema/vega/v4.json",
+ "width": 960,
+ "height": 500,
+ "autosize": "none",
+
+ "data": [
+   {
+     "name": "losses2015",
+     "url": "https://raw.githubusercontent.com/risarapu/Vega/master/losses2015_transformed.csv",
+     "format": {"type": "csv", "parse": "auto"},
+     "transform": [
+        {"type": "aggregate",
+         "groupby": ["State_Code","State_Abv"],
+         "ops": ["sum"],
+         "fields": ["Amount"],
+          "as": ["Amount"]
+
+        }
+          ]
+   },
+   {
+     "name": "states",
+     "url": "https://raw.githubusercontent.com/risarapu/Vega/master/us-10m%20(1).json",
+     "format": {"type": "topojson", "feature": "states"},
+     "transform": [
+       {  "type": "lookup", "from": "losses2015", "key": "State_Code", "fields": ["id"], "values": ["Amount","State_Abv"] },
+       { "type": "filter", "expr": "datum.Amount != null" }
+
+     ]
+   }
+ ],
+
+ "projections": [
+   {
+     "name": "projection",
+     "type": "albersUsa"
+   }
+ ],
+
+ "scales": [
+   {
+     "name": "color",
+     "type": "quantize",
+     "domain": {"data": "losses2015", "field": "Amount"},
+     "range": {"scheme": "blues","count" : 7}
+   }
+ ],
+
+"legends": [
+   {
+     "fill": "color",
+     "orient": "bottom-right",
+     "title": "Agricultural Losses 2015",
+     "strokeWidth": {"value": 5}
+   }
+ ],
+
+ "marks": [
+   {
+     "type": "shape",
+     "from": {"data": "states"},
+     "encode": {
+       "enter": { "tooltip": 
+       {"signal": "'['+'Amount :'+datum.Amount+', State_Abv :'+ datum.State_Abv+'] ' "}
+       },
+
+       "update": { "fill": {"scale": "color", "field": "Amount"} },
+       "hover": { "fill": {"value": "red"} }
+     },
+     "transform": [
+       { "type": "geoshape", "projection": "projection" }
+     ]
+   }
+ ]
+}
