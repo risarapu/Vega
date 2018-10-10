@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Bar CHart D3</title>
+        <script src="https://d3js.org/d3.v5.min.js"></script>
+
+        <style type="text/css">
+        .mycircle {
+          fill: blue; 
+          stroke: red; 
+          stroke-width: 5;
+        }
+        svg .myrect {
+            fill: steelblue;
+            stroke-width: 0px;
+        }
+        svg .projection {
+          fill: white;
+        }
+
+        svg .myrect:hover {
+            fill: red;
+        }
+        </style>
+        
+        <script type="text/javascript">
+      var myData;
+            function loadData()
+            {
+              d3.csv("https://raw.githubusercontent.com/risarapu/Vega/master/losses2015_transformed.csv")
+                .then(function(data)
+              {
+				var myData = d3.nest()
+				.key(function(d) { return d.Damage_Descp; })
+				.rollup(function(d){ return d3.sum(d,function(g){return g.Amount;})})
+				.entries(data);
+				myData.sort(function(x,y){
+					return d3.ascending(x.value,y.value);
+				});
+				xscale=d3.scaleLinear().domain([myData[0].value,myData[32].value]).range([0,500]);
+				ticks=xscale.ticks(5);
+				yscale=d3.scaleLinear();
+                createBarChart(myData);
+              });
+            }
+            function createBarChart(myData) {
+			var xAxis=d3.axisBottom().scale(xscale);
+			xAxis.tickValues(ticks).tickFormat(function(d){return d/10000000+"M" });
+			var counter=0;
+              var svg = d3.select("body")
+                          .append("svg")
+                          .attr("width", 1200)
+                          .attr("height", 1500)
+						  .attr("margin",10);
+              // generate bars
+              svg.selectAll("g")
+                  .data(myData)
+                  .enter()
+                  .append("rect")
+                  .attr("x", 225)
+                  .attr("y", function(d, i)
+                    {
+						
+                      return (i+1)*(20+2);
+                    })
+                  .attr("height", 20)
+                  .attr("width", function(d, i)
+                    {
+					   
+                      return xscale(d.value);
+					
+                    })
+                  .attr("class", "myrect");
+              // generate labels
+			  
+              svg.selectAll("text.Damage_Descp")
+                  .data(myData)
+                  .enter()
+                  .append("text")
+                  .text(function(d, i)
+                    {
+						
+						//console.log(d)
+                      return d.key;
+                    })
+                  .attr("x", 0)
+                  .attr("y", function(d, i)
+                    {
+                      return (i+1)*(20+2) + 15;
+                    });
+					svg.append("line")
+					.style("stroke","black")
+					.attr("x1",220)
+					.attr("y1",22)
+					.attr("x2",220)
+					.attr("y2",745)
+					
+				svg.append("g").attr("class","axis").attr("transform","translate(220,745)").call(xAxis)	
+            }
+            window.onload = loadData;
+        </script>
+
+
+    </head>
+
+
+    <body>
+
+    </body>
+</html>
