@@ -1,0 +1,333 @@
+//Reference
+http://bl.ocks.org/dougdowson/9832019
+
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style type="text/css">
+
+body {
+  font-family: 'Times New Roman', sans-serif;
+}
+
+.g-hed {
+  text-align: left;
+  text-transform: uppercase;
+  font-weight: bold;
+  font-size:22px;
+  margin: 3px 0;
+}
+
+.g-source-bold {
+  text-align: left;
+  font-size:10px;
+  font-weight: bold;
+}
+
+.g-source-reg {
+  text-align: left;
+  font-size:10px;
+}
+
+.g-source {
+  margin: 10px 0;
+}
+
+.g-intro {
+  font-size: 16px;
+  margin: 0px 0px 10px 0px;
+}
+
+.states {
+  fill: #d3d3d3;
+  stroke: #ffffff;
+  stroke-linejoin: round;
+}
+
+.q0-9 { fill: #1e90ff; }
+.q1-9 { fill: #00bfff; }
+.q2-9 { fill: #87ceeb; }
+.q3-9 { fill: #87cefa; }
+.q4-9 { fill: #4682b4; }
+
+#q0-9 { background-color: #1e90ff; }
+#q1-9 { background-color: #00bfff; }
+#q2-9 { background-color: #87ceeb; }
+#q3-9 { background-color: #87cefa; }
+#q4-9 { background-color: #4682b4; }
+
+div.tooltip {
+  position: absolute;
+  left: 75px;
+  text-align: center;
+  height: 12px;
+  padding: 8px;
+  font-size: 13px;
+  font-family: 'Times New Roman', sans-serif;
+  background: #FFFFFF;
+  border: 1px solid #989898;
+  pointer-events: none;
+}
+
+.block {
+  width:18%;
+  height: 15px;
+  display:inline-block;
+}
+
+svg .myrect {
+    fill: steelblue;
+    stroke-width: 0px;
+}
+svg .projection {
+  fill: white;
+}
+.mycircle {
+  fill: blue;
+  stroke: red;
+  stroke-width: 5;
+}
+
+</style>
+<head>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/5.7.0/d3.min.js"></script>
+  <script>
+    d3version5 = d3
+    window.d3 = null
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+  <script>
+    d3version3 = d3
+    window.d3 = null
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/queue-async/1.0.7/queue.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/1.6.19/topojson.min.js"></script>
+
+</head>
+<body>
+  <h5 class="g-hed"></h5>
+  <p class="g-intro"></p>
+  <div class="g-chart"></div>
+    <div class="legend">
+    <div class="block" id="q0-9"></div>
+    <div class="block" id="q1-9"></div>
+    <div class="block" id="q2-9"></div>
+    <div class="block" id="q3-9"></div>
+    <div class="block" id="q4-9"></div>
+  </div>
+  <div class="g-source"><span class="g-source-bold"></span><span class="g-source-reg"></span></div>
+</body>
+
+<div>
+
+
+<script type="text/javascript">
+
+var div = d3version3.select("body").append("div")
+  .attr("class", "tooltip")
+  .style("opacity", 0);
+
+var margin = {top: 10, left: 10, bottom: 10, right: 10}
+  , width = window.outerWidth
+  , width = width - margin.left - margin.right
+  , mapRatio = .5
+  , height = width * mapRatio;
+
+var projection = d3version3.geo.albersUsa()
+    .scale(width)
+    .translate([width / 2, height / 2]);
+
+var path = d3version3.geo.path()
+    .projection(projection);
+
+var map = d3version3.select(".g-chart").append("svg")
+  .style('height', height + 'px')
+  .style('width', width + 'px');
+
+queue()
+    .defer(d3version3.json, "https://raw.githubusercontent.com/risarapu/Vega/master/Visualization2/us-10m.json")
+    .defer(d3version3.csv, "https://raw.githubusercontent.com/risarapu/Vega/master/Visualization2/Aggregate_Amt.csv")
+    .await(ready);
+
+d3version3.selection.prototype.moveToFront = function() {
+  return this.each(function(){
+    this.parentNode.appendChild(this);
+  });
+};
+
+d3version3.selection.prototype.moveToBack = function() {
+  return this.each(function() {
+  var firstChild = this.parentNode.firstChild;
+    if (firstChild) {
+      this.parentNode.insertBefore(this, firstChild);
+    }
+  });
+};
+
+function ready(error, us, maptemplate) {
+  if (error) throw error;
+
+
+  var Amount_Agg = d3version3.median(maptemplate, function(d) { return d.Amount;});
+  var quantize = d3version3.scale.quantize()
+    .domain([0, Amount_Agg])
+    .range(d3version3.range(5).map(function(i) { return "q" + i + "-9"; }));
+
+  var dataByFIPS = {};
+  maptemplate.forEach(function(d) { dataByFIPS[d.State_Code] = +d.Amount; });
+
+  var stateByFIPS = {};
+  maptemplate.forEach(function(d) { stateByFIPS[d.State_Code] = d.State_Abv; });
+
+  d3version3.select(".g-hed").text("Loss transformation 2015");
+
+  var that = this;
+  map.append("g")
+    .attr("class", "states")
+    .selectAll("path")
+    .data(topojson.feature(us, us.objects.states).features)
+    .enter().append("path")
+    .attr("d", path)
+ 
+    .attr("class", function(d) { return quantize(dataByFIPS[d.id]); })
+    .on("mouseover", function(d) {
+      var sel = d3version3.select(this);
+      console.log(sel,d,  d3version3.select(d));
+      sel.moveToFront();
+      d3version3.select(this).transition().duration(300).style("opacity", 0.8);
+      div.transition().duration(300)
+      .style("opacity", 1)
+      div.text(stateByFIPS[d.id] + ": " + dataByFIPS[d.id])
+      .style("left", (d3version3.event.pageX) + "px")
+      .style("top", (d3version3.event.pageY -30) + "px");
+    })
+    .on("mouseout", function() {
+      var sel = d3version3.select(this);
+        sel.moveToBack();
+      d3version3.select(this)
+      .transition().duration(300)
+      .style("opacity", 1);
+      div.transition().duration(300)
+      .style("opacity", 0);
+    });
+
+d3version3.select(window).on('resize', resize);
+
+function resize() {
+
+    var w = d3version3.select(".g-chart").node().clientWidth;
+    console.log("resized", w);
+
+    width = w - margin.left - margin.right;
+    height = width * mapRatio;
+
+    var newProjection = d3version3.geo.albersUsa()
+      .scale(width)
+      .translate([width / 2, height / 2]);
+
+    path = d3version3.geo.path()
+      .projection(newProjection);
+
+    map
+        .style('width', width + 'px')
+        .style('height', height + 'px');
+
+    // resize the map
+    map.selectAll("path").attr('d', path);
+}
+}
+
+</script></div>
+
+<div>
+  <script type="text/javascript">
+  var myData;
+  var div = d3version5.select("body").append("div")
+    .attr("class", "tooltip")
+    .style("opacity", 0);
+  function loadData()
+  {
+    d3version5.csv("https://raw.githubusercontent.com/risarapu/Vega/master/Visualization2/losses2015_transformed.csv")
+      .then(function(data)
+    {
+
+var myData = d3version5.nest()
+.key(function(d) { return d.Damage_Descp; })
+.rollup(function(d){ return d3version5.sum(d,function(g){return g.Amount;})})
+.entries(data);
+myData.sort(function(x,y){
+return d3version5.ascending(x.value,y.value);
+});
+
+xscale=d3version5.scaleLinear().domain([myData[0].value,myData[32].value]).range([0,1000]);
+ticks=xscale.ticks(10);
+yscale=d3version5.scaleLinear();
+      createBarChart(myData);
+
+    });
+  }
+function createBarChart(myData) {
+var x_axis=d3version5.axisBottom().scale(xscale);
+x_axis.tickValues(ticks).tickFormat(function(d){return d/1000000+"M" });
+    var svg = d3version5.select("body")
+                .append("svg")
+                .attr("width", 1000)
+                .attr("height", 800)
+    .attr("margin",20);
+    // generate bars
+    svg.selectAll("g")
+        .data(myData)
+        .enter()
+        .append("rect")
+        .attr("x", 225)
+        .attr("y", function(d, i)
+          {
+            return (i+1)*(20+2);
+          })
+        .attr("height",10)
+        .attr("width", function(d, i)
+          {
+ return xscale(d.value);
+
+          })
+        .attr("class", "myrect")
+        .on("mouseover", function(d) {
+          console.log("tooltip",);
+          div.transition().duration(250)
+          .style("opacity", 1)
+          div.text(d.key + " : $" + d.value)
+          .style("left", (d3version5.event.pageX) + "px")
+          .style("top", (d3version5.event.pageY -30) + "px");
+        })
+        .on("mouseout", function() {
+
+        
+          div.transition().duration(250)
+          .style("opacity", 0);
+        });
+
+    svg.selectAll("text.Damage_Descp")
+        .data(myData)
+        .enter()
+        .append("text")
+        .text(function(d, i)
+          {
+            return d.key;
+          })
+        .attr("x", 0)
+        .attr("y", function(d, i)
+          {
+            return (i+1)*(20+2) + 20;
+          });
+svg.append("line")
+.style("stroke","black")
+.attr("x1",220)
+.attr("y1",22)
+.attr("x2",220)
+.attr("y2",745)
+
+
+svg.append("g").attr("class","axis").attr("transform","translate(220,745)").call(x_axis)
+  }
+  window.onload = loadData;
+  </script>
+</div>
